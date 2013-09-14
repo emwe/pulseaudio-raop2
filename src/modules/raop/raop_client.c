@@ -560,7 +560,10 @@ static ssize_t udp_send_audio_packet(pa_raop_client *c, bool retrans, uint8_t *b
     int fd = retrans ? c->udp_control_fd : c->udp_stream_fd;
 
     length = pa_write(fd, buffer, size, NULL);
-
+    if ((length == -1) && ((errno == EAGAIN) || (errno == EWOULDBLOCK))) {
+        pa_log_debug("Discarding audio packet %d (blocking)", c->seq);
+        length = size;
+    }
     return length;
 }
 
